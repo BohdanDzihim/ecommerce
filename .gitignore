@@ -1,0 +1,22 @@
+# Python virtual environment
+.venv/
+
+# VSCode settings
+.vscode/
+
+# Security - Private key for EC2 Access
+*.pem
+
+# DB dumps
+*.pgsql
+
+# Node dependencies & build output
+frontend/node_modules/
+frontend/build/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Django env files (backend .env files)
+.env*
