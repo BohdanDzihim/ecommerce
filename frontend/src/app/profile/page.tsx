@@ -43,7 +43,7 @@ const Profile = () => {
           {user && (
             <div className='flex flex-col items-center justify-center'>
               <img
-                src={customer?.imageUrl || '/images/placeholder.png'} 
+                src={customer?.imageUrl || 'https://s3-bucket-for-ecommerce-app.s3.eu-central-1.amazonaws.com/placeholders/placeholder.png'} 
                 alt='image'
                 className='w-40 h-40 rounded-full mb-4'
               />

@@ -30,7 +30,7 @@ const AllProducts = () => {
             className="border rounded-lg p-4 shadow hover:shadow-lg transition duration-300 cursor-pointer flex flex-col justify-between hover:scale-105"
           >
             <img
-              src={product.imageUrl || '/images/placeholder.png'}
+              src={product.imageUrl || 'https://s3-bucket-for-ecommerce-app.s3.eu-central-1.amazonaws.com/placeholders/placeholder.png'}
               alt={product.name}
               className="w-full h-48 object-cover rounded mb-4"
             />

@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { api } from '@/hooks/api';
-import { FaTrash } from 'react-icons/fa6';
+import { FaTrashAlt } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 
 interface CartItem {
@@ -139,7 +139,7 @@ const Cart = () => {
             <tr key={item.id} className="border-b text-xl">
               <td className="py-4 flex items-center gap-4">
                 <img
-                  src={item.product.imageUrl || '/images/placeholder.png'}
+                  src={item.product.imageUrl || 'https://s3-bucket-for-ecommerce-app.s3.eu-central-1.amazonaws.com/placeholders/placeholder.png'}
                   alt={item.product.name}
                   className="w-20 h-20 object-contain rounded"
                 />
@@ -180,7 +180,7 @@ const Cart = () => {
                   onClick={() => handleRemove(item.product.id)}
                   className="text-black hover:text-red-600 cursor-pointer"
                 >
-                  <FaTrash />
+                  <FaTrashAlt />
                 </button>
               </td>
             </tr>
