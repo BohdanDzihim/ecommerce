@@ -96,7 +96,7 @@ const Header = () => {
                       onClick={() => setShowDropdown(false)}
                     >
                       <img
-                        src={product.imageUrl || "/images/placeholder.jpg"}
+                        src={product.imageUrl || "https://s3-bucket-for-ecommerce-app.s3.eu-central-1.amazonaws.com/placeholders/placeholder.png"}
                         alt={product.name}
                         className="w-10 h-10 object-cover rounded"
                       />
