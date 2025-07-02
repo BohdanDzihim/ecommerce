@@ -293,7 +293,7 @@ const EditProfile = () => {
                     <div>
                       <div className="relative group w-40 h-40 rounded-full overflow-hidden border border-gray-300 shadow-sm">
                         <img
-                          src={customer?.imageUrl || '/images/placeholder.png'}
+                          src={customer?.imageUrl || 'https://s3-bucket-for-ecommerce-app.s3.eu-central-1.amazonaws.com/placeholders/placeholder.png'}
                           alt="Profile"
                           className="w-40 h-40 object-cover"
                         />

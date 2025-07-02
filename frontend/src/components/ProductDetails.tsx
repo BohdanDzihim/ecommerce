@@ -28,7 +28,7 @@ const ProductDetails = ({ product }: Props) => {
       <div className="flex flex-col md:flex-row gap-10">
         <div className="w-full md:w-1/2 flex justify-center">
           <img
-            src={product.imageUrl || '/images/placeholder.png'}
+            src={product.imageUrl || 'https://s3-bucket-for-ecommerce-app.s3.eu-central-1.amazonaws.com/placeholders/placeholder.png'}
             alt={product.name}
             className="rounded-lg max-h-[400px] object-contain"
           />

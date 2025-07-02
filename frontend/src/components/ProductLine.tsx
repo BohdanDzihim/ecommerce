@@ -23,7 +23,7 @@ const ProductLine = ({product}: ProductLineProps) => {
   return (
     <div onClick={() => handleClick(product.id)} className="flex justify-between items-center border rounded-xl p-6 hover:scale-105 duration-300">
       <img 
-        src={product.imageUrl || 'images/placeholder.png'} 
+        src={product.imageUrl || 'https://s3-bucket-for-ecommerce-app.s3.eu-central-1.amazonaws.com/placeholders/placeholder.png'} 
         alt={product.name} 
         className="w-16 h-16 object-contain rounded" 
       />
