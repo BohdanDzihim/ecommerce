@@ -1,8 +1,9 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { UserProfile, CustomerProfile, SellerProfile } from '@/types/users';
 import { api } from '@/hooks/api';
 import camelcaseKeys from 'camelcase-keys';
+import { FaTrashAlt } from 'react-icons/fa';
 
 const EditProfile = () => {
   const [activeTab, setActiveTab] = useState<'general' | 'customer' | 'seller'>('general');
@@ -12,10 +13,15 @@ const EditProfile = () => {
   const [isSeller, setIsSeller] = useState(false);
   const [wasSeller, setWasSeller] = useState(false);
   const [showCongrats, setShowCongrats] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [pendingSave, setPendingSave] = useState(false);
 
   const handleSubmit = async(e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    await handleSave();
+  };
 
+  const handleSave = async() => {
     try {
       const response = await api.patch('auth/profile/edit/', {
         user: {
@@ -55,22 +61,14 @@ const EditProfile = () => {
         setIsSeller(true);
       }
 
-      console.log(`updated.user.is_seller: ${updated.user.is_seller}`);
-      
-      console.log(`wasSeller: ${wasSeller}`);
       if (!wasSeller && updated.user.is_seller) {
         setShowCongrats(true);
-        console.log(`showCongrats: ${showCongrats}`);
         setActiveTab('seller');
       }
-
-      console.log(`showCongrats2: ${showCongrats}`);
-
-      console.log(updated);
     } catch(err) {
       console.error(err);
     }
-  };
+  }
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>, 
@@ -92,6 +90,78 @@ const EditProfile = () => {
     }
   };
 
+  const handleDeleteImage = async() => {
+    try {
+      if (!customer?.imageUrl) return;
+
+      await api.post('uploads/delete/', {
+        file_url: customer.imageUrl,
+      });
+      
+      setCustomer(prev => {
+        const updated = prev ? { ...prev, imageUrl: '' } : prev;
+        return updated;
+      });
+      setPendingSave(true);
+    } catch(err) {
+      console.error('Deletion error: ', err);
+    }
+  };
+
+  const handleImageUpload = async (file: File) => {
+    try {
+      const extension = file.name.split('.').pop();
+      const contentType = file.type;
+
+      if (customer?.imageUrl) {
+        await api.post('uploads/delete/', {
+          file_url: customer.imageUrl,
+        });
+      }
+
+      const res = await api.post('uploads/presign/', {
+        extension,
+        content_type: contentType,
+        folder: "profile-images"
+      });
+
+      const { upload_url, file_url } = res.data;
+
+      console.log(file_url);
+
+      await fetch(upload_url, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': contentType,
+        },
+        body: file,
+      });
+
+      setCustomer(prev => {
+        const updated = prev ? { ...prev, imageUrl: file_url } : prev;
+        return updated;
+      });
+      setPendingSave(true);
+    } catch (err) {
+      console.error('Upload failed', err);
+    }
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleImageUpload(file);
+  };
+
+  const openFileDialog = () => {
+    inputRef.current?.click();
+  };
+
+  useEffect(() => {
+    if (pendingSave) {
+      handleSave().then(() => setPendingSave(false));
+    }
+  }, [pendingSave]);
+
   useEffect(() => {
     const fetchProfile = async() => {
       try {
@@ -105,8 +175,6 @@ const EditProfile = () => {
           setIsSeller(true);
           setSeller(data.sellerProfile);
         }
-
-        console.log(response.data);
       } catch(err) {
         console.error(err);
       }
@@ -164,59 +232,103 @@ const EditProfile = () => {
           <main>
             {user && activeTab === 'general' && (
               <div>
-                <div className='text-5xl font-bold my-6'>General Profile</div>
-                <form onSubmit={(e) => handleSubmit(e)} className='space-y-6'>
-                  <div className='flex flex-col'>
-                    <label className='mb-1 block text-xl'>Username</label>
-                    <input 
-                      type="text" 
-                      name='username'
-                      value={user?.username || ''}
-                      onChange={(e) => handleChange(e, 'user')}
-                      className='border p-1 rounded w-96' 
-                    />
+                <div className="text-5xl font-bold my-6">General Profile</div>
+                <form onSubmit={(e) => handleSubmit(e)} className="space-y-6">
+                  <div className="flex items-start gap-12">
+                    <div>
+                      <div className="flex flex-col mb-4">
+                        <label className="mb-1 block text-xl">Username</label>
+                        <input
+                          type="text"
+                          name="username"
+                          value={user?.username || ''}
+                          onChange={(e) => handleChange(e, 'user')}
+                          className="border p-1 rounded w-96"
+                        />
+                      </div>
+                      <div className="flex flex-col mb-4">
+                        <label className="mb-1 block text-xl">First Name</label>
+                        <input
+                          type="text"
+                          name="firstName"
+                          value={user?.firstName || ''}
+                          onChange={(e) => handleChange(e, 'user')}
+                          className="border p-1 rounded w-96"
+                        />
+                      </div>
+                      <div className="flex flex-col mb-4">
+                        <label className="mb-1 block text-xl">Last Name</label>
+                        <input
+                          type="text"
+                          name="lastName"
+                          value={user?.lastName || ''}
+                          onChange={(e) => handleChange(e, 'user')}
+                          className="border p-1 rounded w-96"
+                        />
+                      </div>
+                      <div className="flex flex-col mb-4">
+                        <label className="mb-1 block text-xl">Email</label>
+                        <input
+                          type="text"
+                          name="email"
+                          value={user?.email || ''}
+                          onChange={(e) => handleChange(e, 'user')}
+                          className="border p-1 rounded w-96"
+                        />
+                      </div>
+                      {!isSeller && (
+                        <div className="flex flex-row items-center">
+                          <label className="mr-2 block text-xl">Is Seller</label>
+                          <input
+                            type="checkbox"
+                            name="isSeller"
+                            checked={user?.isSeller || false}
+                            onChange={(e) => handleChange(e, 'user')}
+                            className="border rounded h-4 w-4 cursor-pointer"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <div className="relative group w-40 h-40 rounded-full overflow-hidden border border-gray-300 shadow-sm">
+                        <img
+                          src={customer?.imageUrl || '/images/placeholder.png'}
+                          alt="Profile"
+                          className="w-40 h-40 object-cover"
+                        />
+                        <div
+                          onClick={openFileDialog}
+                          className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                        >
+                          <span className="text-white text-sm font-semibold bg-gray-800 bg-opacity-80 px-3 py-1 rounded hover:bg-opacity-100">
+                            Change
+                          </span>
+                        </div>
+                        <input
+                          ref={inputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageSelect}
+                          className="hidden"
+                        />
+                      </div>
+                      
+                      <button
+                        onClick={handleDeleteImage}
+                        className="mt-2 text-xl w-full flex justify-center items-center gap-2 text-red-600 hover:text-red-800 text-sm transition-opacity group-hover:opacity-100 duration-300 cursor-pointer"
+                      >
+                        <FaTrashAlt />
+                      </button>
+                    </div>
                   </div>
-                  <div className='flex flex-col'>
-                    <label className='mb-1 block text-xl'>First Name</label>
-                    <input 
-                      type="text" 
-                      name='firstName'
-                      value={user?.firstName || ''}
-                      onChange={(e) => handleChange(e, 'user')}
-                      className='border p-1 rounded w-96' 
-                    />
-                  </div>
-                  <div className='flex flex-col'>
-                    <label className='mb-1 block text-xl'>Last Name</label>
-                    <input 
-                      type="text" 
-                      name='lastName'
-                      value={user?.lastName || ''}
-                      onChange={(e) => handleChange(e, 'user')}
-                      className='border p-1 rounded w-96' 
-                    />
-                  </div>
-                  <div className='flex flex-col'>
-                    <label className='mb-1 block text-xl'>Email</label>
-                    <input 
-                      type="text" 
-                      name='email'
-                      value={user?.email || ''}
-                      onChange={(e) => handleChange(e, 'user')}
-                      className='border p-1 rounded w-96' 
-                    />
-                  </div>
-                  {!isSeller && (<div className='flex flex-row items-center'>
-                    <label className='mr-2 block text-xl'>Is Seller</label>
-                    <input 
-                      type="checkbox" 
-                      name='isSeller'
-                      checked={user?.isSeller || false}
-                      onChange={(e) => handleChange(e, 'user')}
-                      className='border rounded h-4 w-4 cursor-pointer' 
-                    />
-                  </div>)}
-                  <button type='submit' className='bg-black text-white px-6 py-2 rounded-xl text-2xl cursor-pointer hover:opacity-80 duration-300'>Save Changes</button>
+
+                  <button
+                    type="submit"
+                    className="bg-black text-white px-6 py-2 rounded-xl text-2xl cursor-pointer hover:opacity-80 duration-300"
+                  >
+                    Save Changes
+                  </button>
                 </form>
               </div>
             )}
