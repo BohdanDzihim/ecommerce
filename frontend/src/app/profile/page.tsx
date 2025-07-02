@@ -10,20 +10,28 @@ const Profile = () => {
   const [user, setUser] = useState<UserProfile>();
   const [customer, setCustomer] = useState<CustomerProfile>();
   const [seller, setSeller] = useState<SellerProfile>();
-
+  const [isCustomerEmpty, setIsCustomerEmpty] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     const fetchUser = async() => {
       try {
         const response = await api.get('auth/profile/');
-        const camelData = camelcaseKeys(response.data, { deep: true })
-        console.log(response.data);
-        console.log(response.data.user);
-        console.log(response.data.customer_profile);
-        console.log(response.data.seller_profile);
+        const camelData = camelcaseKeys(response.data, { deep: true });
+        
         setUser(camelData.user);
         setCustomer(camelData.customerProfile);
+
+        if (
+          camelData.customerProfile.phone ||
+          camelData.customerProfile.address ||
+          camelData.customerProfile.postalCode ||
+          camelData.customerProfile.city ||
+          camelData.customerProfile.country
+        ) {
+          setIsCustomerEmpty(false);
+        }
+
         if (camelData.sellerProfile) {
           setSeller(camelData.sellerProfile);
         }
@@ -68,8 +76,8 @@ const Profile = () => {
         </div>
 
         <div className="mt-4 w-full flex justify-center">
-          <div className={`${customer && seller ? 'grid-cols-2 gap-12' : 'grid-cols-1'} w-full max-w-5xl grid`}>
-            {customer && (
+          <div className={`${customer && seller && !isCustomerEmpty ? 'grid-cols-2 gap-12' : 'grid-cols-1'} w-full max-w-5xl grid`}>
+            {customer && !isCustomerEmpty && (
               <ProfileSection
                 title="Customer"
                 fields={[
