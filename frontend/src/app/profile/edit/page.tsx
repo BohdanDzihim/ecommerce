@@ -14,10 +14,14 @@ const EditProfile = () => {
   const [wasSeller, setWasSeller] = useState(false);
   const [showCongrats, setShowCongrats] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [pendingSave, setPendingSave] = useState(false);
 
   const handleSubmit = async(e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    await handleSave();
+  };
 
+  const handleSave = async() => {
     try {
       const response = await api.patch('auth/profile/edit/', {
         user: {
@@ -64,7 +68,7 @@ const EditProfile = () => {
     } catch(err) {
       console.error(err);
     }
-  };
+  }
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>, 
@@ -94,7 +98,11 @@ const EditProfile = () => {
         file_url: customer.imageUrl,
       });
       
-      setCustomer(prev => prev ? { ...prev, imageUrl: '' } : prev);
+      setCustomer(prev => {
+        const updated = prev ? { ...prev, imageUrl: '' } : prev;
+        return updated;
+      });
+      setPendingSave(true);
     } catch(err) {
       console.error('Deletion error: ', err);
     }
@@ -123,7 +131,11 @@ const EditProfile = () => {
         body: file,
       });
 
-      setCustomer(prev => prev ? { ...prev, imageUrl: file_url } : prev);
+      setCustomer(prev => {
+        const updated = prev ? { ...prev, imageUrl: file_url } : prev;
+        return updated;
+      });
+      setPendingSave(true);
     } catch (err) {
       console.error('Upload failed', err);
     }
@@ -137,6 +149,12 @@ const EditProfile = () => {
   const openFileDialog = () => {
     inputRef.current?.click();
   };
+
+  useEffect(() => {
+    if (pendingSave) {
+      handleSave().then(() => setPendingSave(false));
+    }
+  }, [pendingSave]);
 
   useEffect(() => {
     const fetchProfile = async() => {
