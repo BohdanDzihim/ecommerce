@@ -113,6 +113,12 @@ const EditProfile = () => {
       const extension = file.name.split('.').pop();
       const contentType = file.type;
 
+      if (customer?.imageUrl) {
+        await api.post('uploads/delete/', {
+          file_url: customer.imageUrl,
+        });
+      }
+
       const res = await api.post('uploads/presign/', {
         extension,
         content_type: contentType,
