@@ -9,18 +9,21 @@ const Login = () => {
     username: '', 
     password: '',
   });
+
+  const [error, setError] = useState('');
+
   const { login } = useAuth();
   const router = useRouter();
 
   const handleLogin = async(e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await api.post('auth/login/', form);
+      await api.post('auth/login/', form);
       login({username: form.username, password: form.password});
       router.push('/');
-      console.log(response.data);
     } catch(err) {
       console.error(err);
+      setError("Invalid username or password!");
     }
   };
 
@@ -32,35 +35,40 @@ const Login = () => {
   };
 
   return (
-    <div className='flex flex-col gap-4 items-center'>
-      <div className='text-5xl font-semibold'>Login</div>
-      <form onSubmit={handleLogin}>
-        <div className='flex items-center gap-2 mb-4'>
-          <label htmlFor="username" className='text-2xl font-semibold'>Username: </label>
-          <input 
-            className='border px-2 py-1 rounded text-xl'
-            type="text" 
-            name='username'
-            value={form.username}
-            onChange={handleChange}
-            placeholder='Username'
-          />
-        </div>
-        <div className='flex items-center gap-2 mb-4'>
-          <label htmlFor="password" className='text-2xl font-semibold'>Password: </label>
-          <input 
-            className='border px-2 py-1 rounded text-xl'
-            type="password" 
-            name='password'
-            value={form.password}
-            onChange={handleChange}
-            placeholder='Password'
-          />
-        </div>
-        <button type='submit' className='border rounded-full text-4xl px-4 py-2 bg-black text-white hover:bg-white hover:text-black cursor-pointer duration-300'>Login</button>
-      </form>
+    <div className='min-h-screen flex items-center justify-center bg-gray-100 px-4'>
+      <div className="bg-white p-8 rounded-2xl shadow-md w-full max-w-md">
+        <div className='text-3xl font-bold text-center mb-6'>Login</div>
+
+        {error && <p className="text-red-600 mb-4 text-center">{error}</p>}
+
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label htmlFor="username" className='block font-medium'>Username: </label>
+            <input 
+              className='w-full px-4 py-2 border rounded-xl mt-1'
+              type="text" 
+              name='username'
+              value={form.username}
+              onChange={handleChange}
+              placeholder='Username'
+            />
+          </div>
+          <div>
+            <label htmlFor="password" className='block font-medium'>Password: </label>
+            <input 
+              className='w-full px-4 py-2 border rounded-xl mt-1'
+              type="password" 
+              name='password'
+              value={form.password}
+              onChange={handleChange}
+              placeholder='Password'
+            />
+          </div>
+          <button type='submit' className='w-full bg-black text-white py-2 rounded-xl font-semibold cursor-pointer hover:bg-white hover:text-black border transition duration-300'>Login</button>
+        </form>
+      </div>
     </div>
   );
 };
 
-export default Login;
+export default Login
