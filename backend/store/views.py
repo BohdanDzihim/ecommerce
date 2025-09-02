@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
 from store.serializers import ProductSerializer
 from rest_framework import generics
 from store.models import Product
@@ -43,6 +44,20 @@ class ProductDetailView(generics.RetrieveAPIView):
   permission_classes = [AllowAny]
   serializer_class = ProductSerializer
   queryset = Product.objects.all()
+
+class MyProductListView(generics.ListAPIView):
+  serializer_class = ProductSerializer
+  
+  def get_queryset(self):
+    user = self.request.user
+    if not user.is_seller:
+      raise PermissionDenied("You are not a seller")
+    
+    try: 
+      seller_profile = user.seller_profile
+    except:
+      raise PermissionDenied("Seller profile not found")
+    return Product.objects.filter(user=seller_profile)
 
 class SearchView(generics.ListAPIView):
   permission_classes = [AllowAny]
