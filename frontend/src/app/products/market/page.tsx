@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 const MyProducts = () => {
   const [myProducts, setMyProducts] = useState<Product[]>([]);
   const [isSeller, setIsSeller] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -15,12 +16,15 @@ const MyProducts = () => {
       try {
         const response = await api.get('products/market/');
         setMyProducts(response.data);
-        if (response.status === 403) {
-          console.error("Forbidden. You are not a seller");
+        setIsSeller(true);
+      } catch(err: any) {
+        if (err.response?.status === 403) {
+          setError("Forbidden. You are not a seller");
+          setIsSeller(false);
         } else {
+          setError("An unexpected error occurred. Please try again later.")
           setIsSeller(true);
         }
-      } catch(err) {
         console.error(err);
       }
     };
@@ -30,18 +34,18 @@ const MyProducts = () => {
   return (
     <div className='px-8 py-12 max-w-7xl mx-auto'>
       <div className='text-3xl font-bold mb-10'>My Products</div>
-      {isSeller === false && (<div>
+      {!isSeller && error && (<div>
       <p className='text-xl'>
-        <p>You need to be a seller to view this page. Please contact support if you believe this is an error.</p>
-        <p>Otherwise, you can start selling by applying to become a seller!
-        </p>
+        <span>You need to be a seller to view this page. Please contact support if you believe this is an error.</span>
+        <span>Otherwise, you can start selling by applying to become a seller!
+        </span>
       </p>
       <button
         onClick={() => router.push('/profile/edit/')} 
         className='bg-black text-white px-4 py-2 mt-6 text-2xl rounded-xl border hover:bg-white hover:text-black duration-300 cursor-pointer'
       >Become a seller</button>
       </div>)}
-      {myProducts.length === 0 && isSeller && (<p>You have no products listed. Start selling by adding a new product!</p>
+      {myProducts.length === 0 && isSeller && (<p className='text-xl'>You have no products listed. Start selling by adding a new product!</p>
       )}
       {myProducts.length > 0 && isSeller && (<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">{myProducts.map((myProduct) => (
         <Link
