@@ -15,7 +15,21 @@ const CreateProduct = () => {
     category: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const categories = [
+    { value: 'Electronics', label: 'Electronics' },
+    { value: 'Clothing', label: 'Clothing' },
+    { value: 'Books', label: 'Books' }, 
+    { value: 'Home', label: 'Home' },
+    { value: 'Beauty', label: 'Beauty' },
+    { value: 'Sports', label: 'Sports' },
+    { value: 'Toys', label: 'Toys' },
+    { value: 'Automotive', label: 'Automotive' },
+    { value: 'Health', label: 'Health' },
+    { value: 'Grocery', label: 'Grocery' },
+    { value: 'Miscellaneous', label: 'Miscellaneous' },
+  ];
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   };
 
@@ -87,14 +101,18 @@ const CreateProduct = () => {
         </div>
         <div className="flex flex-col max-w-4xl gap-2">
           <label className="block text-2xl">Category</label>
-          <input 
-            type="text" 
-            name='category'
+          <select 
+            name="category"
             value={formData?.category || ''}
             onChange={handleChange}
             className='border rounded p-1 w-96'
             required
-          />
+          >
+            <option value="">Select a category</option>
+            {categories.map((cat) => (
+              <option key={cat.value} value={cat.value}>{cat.label}</option>
+            ))}
+          </select>
         </div>
         <button type='submit' className='bg-black text-white px-6 py-2 rounded-xl text-2xl cursor-pointer hover:opacity-80 duration-300'>Add</button>
       </form>
