@@ -33,7 +33,13 @@ const MyProducts = () => {
 
   return (
     <div className='px-8 py-12 max-w-7xl mx-auto'>
-      <div className='text-3xl font-bold mb-10'>My Products</div>
+      <div className='flex justify-between items-center mb-10'>
+        <div className='text-3xl font-bold'>My Products</div>
+        {isSeller && (<Link 
+          href={"create/"}
+          className='bg-white px-4 py-2 mt-6 text-2xl rounded-xl border hover:bg-green-600 hover:text-white duration-300 cursor-pointer'
+        >Add</Link>)}
+      </div>
       {!isSeller && error && (<div>
       <p className='text-xl'>
         <span>You need to be a seller to view this page. Please contact support if you believe this is an error.</span>

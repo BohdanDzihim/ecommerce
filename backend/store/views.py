@@ -13,8 +13,19 @@ class CreateProductView(generics.CreateAPIView):
   serializer_class = ProductSerializer
 
   def perform_create(self, serializer):
-    seller_profile = self.request.user.seller_profile
+    user = self.request.user
+    if not user.is_seller:
+        raise PermissionDenied("You are not a seller")
+    seller_profile = user.seller_profile
     serializer.save(user=seller_profile)
+
+  def create(self, request, *args, **kwargs):
+    response = super().create(request, *args, **kwargs)
+    response.data = {
+        "message": "Product is successfully created",
+        "product": response.data
+    }
+    return response
 
 class UpdateProductView(APIView):
   def patch(self, request, pk):
