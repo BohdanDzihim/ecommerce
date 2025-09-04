@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { api } from '@/hooks/api';
 import { Product } from '@/types/products';
 import { UserProfile } from '@/types/users';
@@ -14,6 +14,8 @@ const CreateProduct = () => {
     imageUrl: '',
     category: '',
   });
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [pendingSave, setPendingSave] = useState(false);
 
   const categories = [
     { value: 'Electronics', label: 'Electronics' },
@@ -33,6 +35,47 @@ const CreateProduct = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   };
 
+  const handleImageUpload = async(file: File) => {
+    try {
+      const extension = file.name.split('.').pop();
+      const contentType = file.type;
+
+      const res = await api.post('uploads/presign/', { extension, content_type: contentType, folder: 'product-images' });
+
+      const { upload_url, file_url } = res.data;
+
+      console.log(file_url);
+
+      await fetch(upload_url, {
+        method: 'PUT',
+        headers: { 'Content-Type': contentType },
+        body: file,
+      });
+
+      setFormData({ ...formData, imageUrl: file_url });
+      setPendingSave(true);
+
+    } catch(err) {
+      console.error('Upload failed', err);
+    }
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleImageUpload(file);
+  };
+
+  const openFileDialog = () => {
+    inputRef.current?.click();
+  }
+
+  useEffect(() => {
+    if (pendingSave) {
+      setPendingSave(false);
+    }
+    console.log(formData);
+  }, [pendingSave]);
+
   const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -42,10 +85,9 @@ const CreateProduct = () => {
         name: formData?.name,
         price: formData?.price,
         description: formData?.description,
-        imageUrl: formData?.imageUrl,
+        image_url: formData?.imageUrl,
         category: formData?.category,
       };
-      
       const response = await api.post('products/create/', payload);
       console.log('Product created:', response.data);
     } catch (err) {
@@ -91,12 +133,19 @@ const CreateProduct = () => {
         </div>
         <div className="flex flex-col max-w-4xl gap-2">
           <label className="block text-2xl">Image</label>
+          <div
+            onClick={openFileDialog}
+            className='px-2 py-1 mt-2 text-xl rounded-xl border hover:cursor-pointer hover:bg-gray-200 duration-300 w-24 text-center'
+          >
+            Upload
+          </div>
           <input 
-            type="text" 
-            name='image_url'
-            value={formData?.imageUrl || ''}
-            onChange={handleChange}
-            className='border rounded p-1 w-96'
+            ref={inputRef}
+            name='imageUrl'
+            type="file" 
+            accept='image/*'
+            onChange={handleImageSelect}
+            className='hidden'
           />
         </div>
         <div className="flex flex-col max-w-4xl gap-2">
