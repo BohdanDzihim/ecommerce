@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { api } from '@/hooks/api';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import camelcaseKeys from 'camelcase-keys';
 
 const MyProducts = () => {
   const [myProducts, setMyProducts] = useState<Product[]>([]);
@@ -15,7 +16,8 @@ const MyProducts = () => {
     const fetchProducts = async() => {
       try {
         const response = await api.get('products/market/');
-        setMyProducts(response.data);
+        const formatted = camelcaseKeys(response.data, { deep: true });
+        setMyProducts(formatted);
         setIsSeller(true);
       } catch(err: any) {
         if (err.response?.status === 403) {
