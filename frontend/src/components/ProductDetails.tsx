@@ -23,6 +23,17 @@ const ProductDetails = ({ product }: Props) => {
     }
   }
 
+  const handleDelete = async() => {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+
+    try {
+      await api.delete(`products/delete/${product.id}/`);
+      router.push('/products/my');
+    } catch(err) {
+      console.error(err);
+    }
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-6 py-10 bg-white rounded-lg shadow-md text-black">
       <div className="flex flex-col md:flex-row gap-10">
@@ -50,7 +61,15 @@ const ProductDetails = ({ product }: Props) => {
         </div>
         
       </div>
-      <Link href={'/products'} className='flex items-center gap-1 mt-4 hover:underline hover:text-blue-600'><FaArrowLeft /> Back to the Products</Link>
+      <div className='flex justify-between items-center'>
+        <Link href={'/products'} className='flex items-center gap-1 mt-4 hover:underline'><FaArrowLeft /> Back to the Products</Link>
+        {product.isOwner && (
+          <div className="flex gap-4">
+            <Link href={`products/${product.id}/edit`} className="cursor-pointer hover:underline">Edit</Link>
+            <button onClick={handleDelete} className="cursor-pointer hover:underline hover:text-red-600">Delete</button>
+          </div>
+        )}
+      </div>
     </div>
     
   );

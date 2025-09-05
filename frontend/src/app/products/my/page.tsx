@@ -58,7 +58,7 @@ const MyProducts = () => {
       {myProducts.length > 0 && isSeller && (<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">{myProducts.map((myProduct) => (
         <Link
           key={myProduct.id}
-          href={`/products/${myProduct.id}`}
+          href={`${myProduct.id}`}
           className="border rounded-lg p-4 shadow hover:shadow-lg transition duration-300 cursor-pointer flex flex-col justify-between hover:scale-105"
         >
           <img

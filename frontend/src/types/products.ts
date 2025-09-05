@@ -8,4 +8,5 @@ export interface Product {
   description?: string;
   imageUrl?: string;
   category: string;
+  isOwner?: boolean;
 }
