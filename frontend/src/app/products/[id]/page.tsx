@@ -4,6 +4,7 @@ import { api } from '@/hooks/api';
 import ProductDetails from '@/components/ProductDetails';
 import { useParams } from 'next/navigation';
 import { Product } from '@/types/products';
+import camelcaseKeys from 'camelcase-keys';
 
 const ProductPage = () => {
   const [product, setProduct] = useState<Product | null>(null);
@@ -13,7 +14,8 @@ const ProductPage = () => {
     const fetchProduct = async () => {
       try {
         const response = await api.get(`products/${id}/`);
-        setProduct(response.data);
+        const formatted = camelcaseKeys(response.data, { deep: true });
+        setProduct(formatted);
       } catch (error) {
         console.error(error);
       }
