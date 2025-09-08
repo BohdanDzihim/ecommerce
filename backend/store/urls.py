@@ -7,5 +7,5 @@ urlpatterns = [
   path('create/', views.CreateProductView.as_view(), name='product-create'),
   path('update/<int:pk>/', views.UpdateProductView.as_view(), name='product-update'),
   path('delete/<int:pk>/', views.DeleteProductView.as_view(), name='product-delete'), 
-  path('market/', views.MyProductListView.as_view(), name='my-products'),
+  path('my/', views.MyProductListView.as_view(), name='my-products'),
 ]

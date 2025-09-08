@@ -73,14 +73,14 @@ class MyProductListView(generics.ListAPIView):
       seller_profile = user.seller_profile
     except:
       raise PermissionDenied("Seller profile not found")
-    return Product.objects.filter(user=seller_profile)
+    return Product.objects.filter(user=seller_profile).order_by('-id')
 
 class SearchView(generics.ListAPIView):
   permission_classes = [AllowAny]
   serializer_class = ProductSerializer
 
   def get_queryset(self):
-    queryset = Product.objects.all()
+    queryset = Product.objects.all().order_by('-id')
     search = self.request.query_params.get("search")
     if search is not None:
       queryset = queryset.filter(

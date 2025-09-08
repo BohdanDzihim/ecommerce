@@ -15,7 +15,7 @@ const MyProducts = () => {
   useEffect(() => {
     const fetchProducts = async() => {
       try {
-        const response = await api.get('products/market/');
+        const response = await api.get('products/my/');
         const formatted = camelcaseKeys(response.data, { deep: true });
         setMyProducts(formatted);
         setIsSeller(true);

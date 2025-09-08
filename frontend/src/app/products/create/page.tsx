@@ -139,7 +139,7 @@ const CreateProduct = () => {
       }
       const response = await api.post('products/create/', payload);
       console.log('Product created:', response.data);
-      router.push('/products/market/');
+      router.push('/products/my/');
     } catch (err) {
       console.error(err);
     }

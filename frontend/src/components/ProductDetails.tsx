@@ -65,7 +65,7 @@ const ProductDetails = ({ product }: Props) => {
         <Link href={'/products'} className='flex items-center gap-1 mt-4 hover:underline'><FaArrowLeft /> Back to the Products</Link>
         {product.isOwner && (
           <div className="flex gap-4">
-            <Link href={`products/${product.id}/edit`} className="cursor-pointer hover:underline">Edit</Link>
+            <Link href={`${product.id}/edit`} className="cursor-pointer hover:underline">Edit</Link>
             <button onClick={handleDelete} className="cursor-pointer hover:underline hover:text-red-600">Delete</button>
           </div>
         )}
