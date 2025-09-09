@@ -227,7 +227,7 @@ const CreateProduct = () => {
         </div>
         <button type='submit' className='bg-black text-white px-6 py-2 rounded-xl text-2xl cursor-pointer hover:opacity-80 duration-300'>Add</button>
       </form>
-      <Link href={'/products/market/'} className='flex items-center gap-1 mt-4 hover:underline hover:text-blue-600'><FaArrowLeft /> Back to your Products</Link>
+      <Link href={'/products/my/'} className='flex items-center gap-1 mt-4 hover:underline hover:text-blue-600'><FaArrowLeft /> Back to your Products</Link>
     </div>
   )
 }
