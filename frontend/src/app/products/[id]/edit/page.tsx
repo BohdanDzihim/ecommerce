@@ -1,22 +1,25 @@
 'use client';
 import { Product } from '@/types/products';
-import React, { useState, useRef, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/hooks/api';
 import { UserProfile } from '@/types/users';
-import { useRouter } from 'next/navigation';
 import camelcaseKeys from 'camelcase-keys';
+import { useImageUpload } from '@/hooks/products/useImageUpload';
 
 const EditProduct = () => {
   const params = useParams;
   const productId = params().id;
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<Product | null>(null)
-  const [selectedImageName, setSelectedImageName] = useState<string>('');
-  const [previewUrl, setPreviewUrl] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [pendingSave, setPendingSave] = useState(false);
+  const {
+    inputRef, 
+    openFileDialog,
+    handleImageUpload, 
+    handleImageDelete 
+  } = useImageUpload();
   const router = useRouter();
 
   const categories = [
@@ -39,8 +42,6 @@ const EditProduct = () => {
         const response = await api.get(`products/${productId}/`);
         const formatted = camelcaseKeys(response.data, { deep: true });
         setFormData(formatted);
-        setSelectedImageName(formatted.imageUrl ? formatted.imageUrl.split('/').pop() || '' : '');
-        setPreviewUrl(formatted.imageUrl || '');
         console.log(formatted);
       } catch(err) {
         console.error('Failed to fetch product data', err);
@@ -52,70 +53,20 @@ const EditProduct = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value } as Product)
   };
-  
-  const handleImageRemove = async() => {
-    if (formData?.imageUrl) {
-      try {
-        await api.post('uploads/delete/', { file_url: formData.imageUrl });
-      } catch(err) {
-        console.error('Failed to delete image from S3', err);
-      }
-    }
-    
-    setFormData({ ...formData, imageUrl: '' } as Product);
-    setPreviewUrl('');
-    setSelectedImageName('');
-    if (inputRef.current) {
-      inputRef.current.value = '';
-    }
-  }
 
-  const handleImageUpload = async(file: File) => {
-    try { 
-      const extension = file.name.split('.').pop();
-      const contentType = file.type;
-
-      if (formData?.imageUrl) {
-        try {
-          await api.post('uploads/delete/', { file_url: formData.imageUrl });
-          setFormData({ ...formData, imageUrl: '' });
-        } catch(err) {
-          console.error('Failed to delete previous image from S3', err);
-        }
-      }
-
-      const res = await api.post('uploads/presign/', { extension, content_type: contentType, folder: 'product-images' });
-
-      const { upload_url, file_url } = res.data;
-
-      console.log(file_url);
-
-      await fetch(upload_url, {
-        method: 'PUT',
-        headers: { 'Content-Type': contentType },
-        body: file,
-      });
-
-      setFormData({ ...formData, imageUrl: file_url } as Product);
-      setPendingSave(true);
-
-    } catch(err) {
-      console.error('Upload failed', err);
-    }
-  };
-
-  const openFileDialog = () => {
-    if (inputRef.current) {
-      inputRef.current.click();
-    }
-  };
-
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async(e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      handleImageUpload(file);
-      setSelectedImageName(file.name);
-      setPreviewUrl(URL.createObjectURL(file));
+    if (!file) return;
+
+    if (formData?.imageUrl){
+      const file_url = await handleImageDelete(formData.imageUrl);
+      setFormData({ ...formData, imageUrl: file_url } as Product);
+    }
+
+    const uploadedUrl = await handleImageUpload(file);
+    if (uploadedUrl) {    
+      setFormData({ ...formData, imageUrl: uploadedUrl } as Product);
+      setPendingSave(true);
     }
   };
 
@@ -129,33 +80,33 @@ const EditProduct = () => {
   const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
     try {
-          const payload = {
-            id: formData?.id,
-            user: formData?.user as UserProfile,
-            name: formData?.name,
-            price: formData?.price,
-            description: formData?.description,
-            image_url: formData?.imageUrl,
-            category: formData?.category,
-          };
-          if (!payload.name || !payload.price || !payload.category) {
-            setError('Please fill in all required fields.');
-            return;
-          }
-          if (payload.price <= 0) {
-            setError('Price must be a positive number.');
-            return;
-          }
-          if (payload.price >= 1000000) {
-            setError('Price exceeds the maximum allowed value. Value must be <1,000,000).');
-            return;
-          }
-          const response = await api.patch(`products/update/${productId}/`, payload);
-          console.log('Product updated:', response.data);
-          router.push('/products/my/');
-        } catch (err) {
-          console.error(err);
-        }
+      const payload = {
+        id: formData?.id,
+        user: formData?.user as UserProfile,
+        name: formData?.name,
+        price: formData?.price,
+        description: formData?.description,
+        image_url: formData?.imageUrl,
+        category: formData?.category,
+      };
+      if (!payload.name || !payload.price || !payload.category) {
+        setError('Please fill in all required fields.');
+        return;
+      }
+      if (payload.price <= 0) {
+        setError('Price must be a positive number.');
+        return;
+      }
+      if (payload.price >= 1000000) {
+        setError('Price exceeds the maximum allowed value. Value must be <1,000,000).');
+        return;
+      }
+      const response = await api.patch(`products/update/${productId}/`, payload);
+      console.log('Product updated:', response.data);
+      router.push('/products/my/');
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   return (
@@ -212,18 +163,18 @@ const EditProduct = () => {
                 className='hidden'
               />
               <div className='text-xl mt-2'>
-                {selectedImageName && previewUrl && 
-                  (<p>Selected: <a href={previewUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{selectedImageName}</a></p>)
-                }
-                {formData?.imageUrl && !previewUrl && (<div>
+                {formData?.imageUrl && (<div className='flex flex-row gap-2'>
                   <p>Current Image: </p>
                   <a href={formData.imageUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{formData.imageUrl.split('/').pop()}</a>
-              </div>)}
+                </div>)}
               </div>
             </div>
             <button
               type='button'
-              onClick={() => handleImageRemove()}
+              onClick={() => {
+                handleImageDelete(formData?.imageUrl || '');
+                setFormData({ ...formData, imageUrl: '' } as Product);
+              }}
               className="mt-2 text-sm text-red-500 underline cursor-pointer hover:text-red-700 text-left"
             >
               Remove Image
