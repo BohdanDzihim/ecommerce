@@ -1,27 +1,16 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { api } from '@/hooks/api';
 import { Product } from '@/types/products';
-import { UserProfile } from '@/types/users';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FaArrowLeft } from 'react-icons/fa';
 import { useImageUpload } from '@/hooks/products/useImageUpload';
+import { useProductForm } from '@/hooks/products/useProductForm';
 
 const CreateProduct = () => {
-  const [formData, setFormData] = useState<Product>({
-    id: 0,
-    user: {} as UserProfile,
-    name: '',
-    price: 0,
-    description: '',
-    imageUrl: '',
-    category: '',
-  });
-  
   const [pendingSave, setPendingSave] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+
+  
+  const { formData, setFormData, error, handleChange, handleSubmit } = useProductForm({ mode: 'create' });
 
   const {
     inputRef,
@@ -43,10 +32,6 @@ const CreateProduct = () => {
     { value: 'Grocery', label: 'Grocery' },
     { value: 'Miscellaneous', label: 'Miscellaneous' },
   ];
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
-  };
 
   const handleImageSelect = async(e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -70,38 +55,6 @@ const CreateProduct = () => {
     }
     console.log(formData);
   }, [pendingSave]);
-
-  const handleSubmit = async(e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const payload = {
-        id: formData?.id,
-        user: formData?.user as UserProfile,
-        name: formData?.name,
-        price: formData?.price,
-        description: formData?.description,
-        image_url: formData?.imageUrl,
-        category: formData?.category,
-      };
-      if (!payload.name || !payload.price || !payload.category) {
-        setError('Please fill in all required fields.');
-        return;
-      }
-      if (payload.price <= 0) {
-        setError('Price must be a positive number.');
-        return;
-      }
-      if (payload.price >= 1000000) {
-        setError('Price exceeds the maximum allowed value. Value must be <1,000,000).');
-        return;
-      }
-      const response = await api.post('products/create/', payload);
-      console.log('Product created:', response.data);
-      router.push('/products/my/');
-    } catch (err) {
-      console.error(err);
-    }
-  }
 
   return (
     <div className='px-8 py-12 max-w-7xl mx-auto'>

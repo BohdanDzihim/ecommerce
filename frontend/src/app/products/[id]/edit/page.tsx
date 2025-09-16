@@ -1,18 +1,17 @@
 'use client';
 import { Product } from '@/types/products';
 import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { api } from '@/hooks/api';
-import { UserProfile } from '@/types/users';
 import camelcaseKeys from 'camelcase-keys';
 import { useImageUpload } from '@/hooks/products/useImageUpload';
+import { useProductForm } from '@/hooks/products/useProductForm';
 
 const EditProduct = () => {
   const params = useParams;
   const productId = params().id;
 
-  const [formData, setFormData] = useState<Product | null>(null)
-  const [error, setError] = useState<string | null>(null);
+  const [initialData, setInitialData] = useState<Product | null>(null)
   const [pendingSave, setPendingSave] = useState(false);
   const {
     inputRef, 
@@ -20,7 +19,7 @@ const EditProduct = () => {
     handleImageUpload, 
     handleImageDelete 
   } = useImageUpload();
-  const router = useRouter();
+  const { formData, setFormData, error, handleChange, handleSubmit } = useProductForm({ mode: 'edit', initialData: initialData });
 
   const categories = [
     { value: 'Electronics', label: 'Electronics' },
@@ -41,7 +40,7 @@ const EditProduct = () => {
       try {
         const response = await api.get(`products/${productId}/`);
         const formatted = camelcaseKeys(response.data, { deep: true });
-        setFormData(formatted);
+        setInitialData(formatted);
         console.log(formatted);
       } catch(err) {
         console.error('Failed to fetch product data', err);
@@ -49,10 +48,6 @@ const EditProduct = () => {
     };
     fetchProduct();
   }, [productId]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value } as Product)
-  };
 
   const handleImageSelect = async(e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -74,40 +69,8 @@ const EditProduct = () => {
     if (pendingSave) {
       setPendingSave(false);
     }
-    console.log(formData);
+    console.log(initialData);
   }, [pendingSave]);
-
-  const handleSubmit = async(e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const payload = {
-        id: formData?.id,
-        user: formData?.user as UserProfile,
-        name: formData?.name,
-        price: formData?.price,
-        description: formData?.description,
-        image_url: formData?.imageUrl,
-        category: formData?.category,
-      };
-      if (!payload.name || !payload.price || !payload.category) {
-        setError('Please fill in all required fields.');
-        return;
-      }
-      if (payload.price <= 0) {
-        setError('Price must be a positive number.');
-        return;
-      }
-      if (payload.price >= 1000000) {
-        setError('Price exceeds the maximum allowed value. Value must be <1,000,000).');
-        return;
-      }
-      const response = await api.patch(`products/update/${productId}/`, payload);
-      console.log('Product updated:', response.data);
-      router.push('/products/my/');
-    } catch (err) {
-      console.error(err);
-    }
-  }
 
   return (
     <div className='px-8 py-12 max-w-7xl mx-auto'>
