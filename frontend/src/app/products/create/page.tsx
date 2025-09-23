@@ -1,60 +1,15 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Product } from '@/types/products';
 import Link from 'next/link';
 import { FaArrowLeft } from 'react-icons/fa';
-import { useImageUpload } from '@/hooks/products/useImageUpload';
+import { useProductImage } from '@/hooks/products/useProductImage';
 import { useProductForm } from '@/hooks/products/useProductForm';
+import { categories } from '@/constants/categories';
 
 const CreateProduct = () => {
-  const [pendingSave, setPendingSave] = useState(false);
-
-  
   const { formData, setFormData, error, handleChange, handleSubmit } = useProductForm({ mode: 'create' });
-
-  const {
-    inputRef,
-    openFileDialog,
-    handleImageUpload,
-    handleImageDelete,
-  } = useImageUpload();
-
-  const categories = [
-    { value: 'Electronics', label: 'Electronics' },
-    { value: 'Clothing', label: 'Clothing' },
-    { value: 'Books', label: 'Books' }, 
-    { value: 'Home', label: 'Home' },
-    { value: 'Beauty', label: 'Beauty' },
-    { value: 'Sports', label: 'Sports' },
-    { value: 'Toys', label: 'Toys' },
-    { value: 'Automotive', label: 'Automotive' },
-    { value: 'Health', label: 'Health' },
-    { value: 'Grocery', label: 'Grocery' },
-    { value: 'Miscellaneous', label: 'Miscellaneous' },
-  ];
-
-  const handleImageSelect = async(e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (formData?.imageUrl){
-      const file_url = await handleImageDelete(formData.imageUrl);
-      setFormData({ ...formData, imageUrl: file_url } as Product);
-    }
-
-    const uploadedUrl = await handleImageUpload(file);
-    if (uploadedUrl) {    
-      setFormData({ ...formData, imageUrl: uploadedUrl } as Product);
-      setPendingSave(true);
-    }
-  };
-
-  useEffect(() => {
-    if (pendingSave) {
-      setPendingSave(false);
-    }
-    console.log(formData);
-  }, [pendingSave]);
+  const { inputRef, openFileDialog, handleImageSelect, handleImageDelete } = useProductImage({ formData: formData, setFormData: setFormData });
 
   return (
     <div className='px-8 py-12 max-w-7xl mx-auto'>

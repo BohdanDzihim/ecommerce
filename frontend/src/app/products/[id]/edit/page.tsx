@@ -4,36 +4,17 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { api } from '@/hooks/api';
 import camelcaseKeys from 'camelcase-keys';
-import { useImageUpload } from '@/hooks/products/useImageUpload';
 import { useProductForm } from '@/hooks/products/useProductForm';
+import { categories } from '@/constants/categories';
+import { useProductImage } from '@/hooks/products/useProductImage';
 
 const EditProduct = () => {
   const params = useParams;
   const productId = params().id;
 
   const [initialData, setInitialData] = useState<Product | null>(null)
-  const [pendingSave, setPendingSave] = useState(false);
-  const {
-    inputRef, 
-    openFileDialog,
-    handleImageUpload, 
-    handleImageDelete 
-  } = useImageUpload();
   const { formData, setFormData, error, handleChange, handleSubmit } = useProductForm({ mode: 'edit', initialData: initialData });
-
-  const categories = [
-    { value: 'Electronics', label: 'Electronics' },
-    { value: 'Clothing', label: 'Clothing' },
-    { value: 'Books', label: 'Books' }, 
-    { value: 'Home', label: 'Home' },
-    { value: 'Beauty', label: 'Beauty' },
-    { value: 'Sports', label: 'Sports' },
-    { value: 'Toys', label: 'Toys' },
-    { value: 'Automotive', label: 'Automotive' },
-    { value: 'Health', label: 'Health' },
-    { value: 'Grocery', label: 'Grocery' },
-    { value: 'Miscellaneous', label: 'Miscellaneous' },
-  ];
+  const imageHook = formData ? useProductImage({ formData, setFormData }) : null;
 
   useEffect(() => {
     const fetchProduct = async() => {
@@ -41,36 +22,12 @@ const EditProduct = () => {
         const response = await api.get(`products/${productId}/`);
         const formatted = camelcaseKeys(response.data, { deep: true });
         setInitialData(formatted);
-        console.log(formatted);
       } catch(err) {
         console.error('Failed to fetch product data', err);
       }
     };
     fetchProduct();
   }, [productId]);
-
-  const handleImageSelect = async(e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (formData?.imageUrl){
-      const file_url = await handleImageDelete(formData.imageUrl);
-      setFormData({ ...formData, imageUrl: file_url } as Product);
-    }
-
-    const uploadedUrl = await handleImageUpload(file);
-    if (uploadedUrl) {    
-      setFormData({ ...formData, imageUrl: uploadedUrl } as Product);
-      setPendingSave(true);
-    }
-  };
-
-  useEffect(() => {
-    if (pendingSave) {
-      setPendingSave(false);
-    }
-    console.log(initialData);
-  }, [pendingSave]);
 
   return (
     <div className='px-8 py-12 max-w-7xl mx-auto'>
@@ -112,17 +69,17 @@ const EditProduct = () => {
             <label className="block text-2xl">Image</label>
             <div className='flex items-center gap-4'>
               <div
-                onClick={openFileDialog}
+                onClick={imageHook?.openFileDialog}
                 className='px-2 py-1 mt-2 text-xl rounded-xl border hover:cursor-pointer hover:bg-gray-200 duration-300 w-24 text-center'
               >
                 Upload
               </div>
               <input 
-                ref={inputRef}
+                ref={imageHook?.inputRef}
                 name='imageUrl'
                 type="file" 
                 accept='image/*'
-                onChange={handleImageSelect}
+                onChange={imageHook?.handleImageSelect}
                 className='hidden'
               />
               <div className='text-xl mt-2'>
@@ -135,7 +92,7 @@ const EditProduct = () => {
             <button
               type='button'
               onClick={() => {
-                handleImageDelete(formData?.imageUrl || '');
+                imageHook?.handleImageDelete(formData?.imageUrl || '');
                 setFormData({ ...formData, imageUrl: '' } as Product);
               }}
               className="mt-2 text-sm text-red-500 underline cursor-pointer hover:text-red-700 text-left"
